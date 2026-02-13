@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto+Sans+JP', sans-serif;
+            background-color: #f8fafc;
+        }
+        .tab-active {
+            border-bottom: 3px solid #3b82f6;
+            color: #3b82f6;
+        }
+        .sticky-note {
+            background-color: #fef3c7;
+            box-shadow: 2px 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .sticky-note.read {
+            background-color: #f1f5f9;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <i data-lucide="home" class="w-6 h-6 text-blue-500"></i>
+                ファミリーダッシュボード
+            </h1>
+            <div id="current-time" class="text-sm text-gray-500 font-medium"></div>
+        </div>
+        <!-- Navigation -->
+        <nav class="flex justify-around border-t max-w-4xl mx-auto">
+            <button onclick="switchTab('stock')" id="tab-stock" class="flex-1 py-3 text-sm font-medium transition-colors tab-active flex flex-col items-center">
+                <i data-lucide="refrigerator" class="w-5 h-5 mb-1"></i>
+                キッチン在庫
+            </button>
+            <button onclick="switchTab('memo')" id="tab-memo" class="flex-1 py-3 text-sm font-medium transition-colors text-gray-500 flex flex-col items-center">
+                <i data-lucide="sticky-note" class="w-5 h-5 mb-1"></i>
+                家族メモ
+            </button>
+            <button onclick="switchTab('schedule')" id="tab-schedule" class="flex-1 py-3 text-sm font-medium transition-colors text-gray-500 flex flex-col items-center">
+                <i data-lucide="calendar" class="w-5 h-5 mb-1"></i>
+                予定表
+            </button>
+        </nav>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-4 mt-4">
+        
+        <!-- Kitchen Stock Section -->
+        <section id="content-stock" class="space-y-6">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <h2 class="font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="plus-circle" class="w-5 h-5 text-green-500"></i>
+                    在庫を追加
+                </h2>
+                <div class="flex flex-wrap gap-2">
+                    <input type="text" id="stock-name" placeholder="品名 (例: 卵, 牛乳)" class="flex-1 min-w-[200px] border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <select id="stock-category" class="border rounded-lg px-3 py-2 text-sm bg-white">
+                        <option value="冷蔵庫">冷蔵庫</option>
+                        <option value="冷凍庫">冷凍庫</option>
+                        <option value="パントリー">パントリー</option>
+                        <option value="その他">その他</option>
+                    </select>
+                    <button onclick="addStock()" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
+                        追加
+                    </button>
+                </div>
+            </div>
+
+            <div id="stock-list" class="grid gap-4 grid-cols-1 md:grid-cols-2">
+                <!-- Stock items injected here -->
+            </div>
+        </section>
+
+        <!-- Memo Section -->
+        <section id="content-memo" class="hidden space-y-6">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <h2 class="font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="pen-tool" class="w-5 h-5 text-yellow-500"></i>
+                    新しいメモを書く
+                </h2>
+                <textarea id="memo-text" rows="3" placeholder="買っておいてほしいもの、伝言など..." class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"></textarea>
+                <button onclick="addMemo()" class="mt-2 w-full bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-yellow-600 transition-colors">
+                    メモを残す
+                </button>
+            </div>
+            <div id="memo-grid" class="grid gap-4 grid-cols-2 md:grid-cols-3">
+                <!-- Memos injected here -->
+            </div>
+        </section>
+
+        <!-- Schedule Section -->
+        <section id="content-schedule" class="hidden space-y-6">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <h2 class="font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="calendar-plus" class="w-5 h-5 text-red-500"></i>
+                    予定を追加
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <input type="date" id="event-date" class="border rounded-lg px-3 py-2 text-sm">
+                    <input type="text" id="event-title" placeholder="予定の内容 (例: 習い事)" class="border rounded-lg px-3 py-2 text-sm">
+                    <button onclick="addEvent()" class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors">
+                        追加
+                    </button>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 border-bottom">
+                        <tr>
+                            <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase">日付</th>
+                            <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase">内容</th>
+                            <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase w-10"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedule-body">
+                        <!-- Events injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- UI Components for Notifications -->
+    <div id="toast" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-2 rounded-full text-sm opacity-0 transition-opacity duration-300 pointer-events-none">
+        保存しました
+    </div>
+
+    <script>
+        // State Management
+        let appData = {
+            stocks: [],
+            memos: [],
+            events: []
+        };
+
+        // Initialize
+        window.onload = () => {
+            loadData();
+            updateTime();
+            setInterval(updateTime, 1000);
+            renderStocks();
+            renderMemos();
+            renderEvents();
+            lucide.createIcons();
+        };
+
+        function updateTime() {
+            const now = new Date();
+            const days = ['日', '月', '火', '水', '木', '金', '土'];
+            document.getElementById('current-time').innerText = 
+                `${now.getMonth() + 1}/${now.getDate()}(${days[now.getDay()]}) ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+        }
+
+        // Tab Navigation
+        function switchTab(tab) {
+            const sections = ['stock', 'memo', 'schedule'];
+            sections.forEach(s => {
+                document.getElementById(`content-${s}`).classList.add('hidden');
+                document.getElementById(`tab-${s}`).classList.remove('tab-active');
+                document.getElementById(`tab-${s}`).classList.add('text-gray-500');
+            });
+            document.getElementById(`content-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).classList.add('tab-active');
+            document.getElementById(`tab-${tab}`).classList.remove('text-gray-500');
+            lucide.createIcons();
+        }
+
+        // Data Storage
+        function saveData() {
+            localStorage.setItem('family_dashboard_data', JSON.stringify(appData));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('family_dashboard_data');
+            if (saved) {
+                appData = JSON.parse(saved);
+                // Migrate old data if 'read' property doesn't exist
+                appData.memos = appData.memos.map(m => ({
+                    ...m,
+                    read: m.read || false
+                }));
+            } else {
+                // Default samples
+                appData.stocks = [
+                    { id: 1, name: '牛乳', category: '冷蔵庫', count: 1 },
+                    { id: 2, name: 'パスタ', category: 'パントリー', count: 2 }
+                ];
+                appData.memos = [
+                    { id: 1, text: '週末にゴミ袋を買う', date: '2024/03/20', read: false }
+                ];
+                appData.events = [
+                    { id: 1, date: '2024-03-25', title: '家族会議' }
+                ];
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => toast.classList.add('opacity-0'), 2000);
+        }
+
+        // Stock Logic
+        function addStock() {
+            const name = document.getElementById('stock-name').value;
+            const category = document.getElementById('stock-category').value;
+            if (!name) return;
+            
+            appData.stocks.push({
+                id: Date.now(),
+                name,
+                category,
+                count: 1
+            });
+            document.getElementById('stock-name').value = '';
+            saveData();
+            renderStocks();
+            showToast('在庫を追加しました');
+        }
+
+        function updateStockCount(id, delta) {
+            const item = appData.stocks.find(s => s.id === id);
+            if (item) {
+                item.count = Math.max(0, item.count + delta);
+                saveData();
+                renderStocks();
+            }
+        }
+
+        function removeStock(id) {
+            appData.stocks = appData.stocks.filter(s => s.id !== id);
+            saveData();
+            renderStocks();
+        }
+
+        function renderStocks() {
+            const list = document.getElementById('stock-list');
+            list.innerHTML = '';
+            
+            appData.stocks.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between";
+                card.innerHTML = `
+                    <div>
+                        <span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full mb-1 block w-fit">${item.category}</span>
+                        <h3 class="font-bold text-gray-800">${item.name}</h3>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center bg-gray-50 rounded-lg p-1">
+                            <button onclick="updateStockCount(${item.id}, -1)" class="w-8 h-8 flex items-center justify-center hover:bg-white rounded-md transition-colors text-blue-500 font-bold">-</button>
+                            <span class="w-8 text-center font-bold">${item.count}</span>
+                            <button onclick="updateStockCount(${item.id}, 1)" class="w-8 h-8 flex items-center justify-center hover:bg-white rounded-md transition-colors text-blue-500 font-bold">+</button>
+                        </div>
+                        <button onclick="removeStock(${item.id})" class="text-gray-300 hover:text-red-400">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        // Memo Logic
+        function addMemo() {
+            const text = document.getElementById('memo-text').value;
+            if (!text) return;
+
+            appData.memos.unshift({
+                id: Date.now(),
+                text,
+                date: new Date().toLocaleDateString('ja-JP'),
+                read: false
+            });
+            document.getElementById('memo-text').value = '';
+            saveData();
+            renderMemos();
+            showToast('メモを保存しました');
+        }
+
+        function toggleRead(id) {
+            const memo = appData.memos.find(m => m.id === id);
+            if (memo) {
+                memo.read = !memo.read;
+                saveData();
+                renderMemos();
+            }
+        }
+
+        function deleteMemo(id) {
+            appData.memos = appData.memos.filter(m => m.id !== id);
+            saveData();
+            renderMemos();
+        }
+
+        function renderMemos() {
+            const grid = document.getElementById('memo-grid');
+            grid.innerHTML = '';
+            appData.memos.forEach(memo => {
+                const note = document.createElement('div');
+                note.className = `sticky-note p-4 rounded-sm relative group ${memo.read ? 'read' : ''}`;
+                
+                const readLabel = memo.read 
+                    ? `<span class="flex items-center gap-1 text-green-600 font-bold text-[10px]"><i data-lucide="check-circle-2" class="w-3 h-3"></i>既読</span>`
+                    : `<button onclick="toggleRead(${memo.id})" class="bg-white/70 hover:bg-white text-gray-700 px-2 py-1 rounded text-[10px] font-medium transition-colors border border-gray-200">既読にする</button>`;
+
+                note.innerHTML = `
+                    <p class="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">${memo.text}</p>
+                    <div class="mt-4 flex justify-between items-center">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-gray-500">${memo.date}</span>
+                            <div class="mt-1">${readLabel}</div>
+                        </div>
+                        <button onclick="deleteMemo(${memo.id})" class="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500">
+                            <i data-lucide="x-circle" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(note);
+            });
+            lucide.createIcons();
+        }
+
+        // Schedule Logic
+        function addEvent() {
+            const date = document.getElementById('event-date').value;
+            const title = document.getElementById('event-title').value;
+            if (!date || !title) return;
+
+            appData.events.push({
+                id: Date.now(),
+                date,
+                title
+            });
+            appData.events.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            document.getElementById('event-date').value = '';
+            document.getElementById('event-title').value = '';
+            saveData();
+            renderEvents();
+            showToast('予定を追加しました');
+        }
+
+        function deleteEvent(id) {
+            appData.events = appData.events.filter(e => e.id !== id);
+            saveData();
+            renderEvents();
+        }
+
+        function renderEvents() {
+            const body = document.getElementById('schedule-body');
+            body.innerHTML = '';
+            
+            if (appData.events.length === 0) {
+                body.innerHTML = `<tr><td colspan="3" class="px-4 py-8 text-center text-gray-400 text-sm">予定はありません</td></tr>`;
+                return;
+            }
+
+            appData.events.forEach(event => {
+                const tr = document.createElement('tr');
+                tr.className = "border-t hover:bg-gray-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-sm font-medium text-gray-600">${event.date.replace(/-/g, '/')}</td>
+                    <td class="px-4 py-3 text-sm text-gray-800">${event.title}</td>
+                    <td class="px-4 py-3 text-right">
+                        <button onclick="deleteEvent(${event.id})" class="text-gray-300 hover:text-red-400">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
